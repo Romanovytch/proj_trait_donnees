@@ -1,15 +1,31 @@
 import os
 
-os.system('clear')
-def menu():
-	print("#"*30+"\n"+"#"+" "*7+"Menu principal"+" "*7+"#"+"\n"+"#"*30)
-	print("1. Visualiser les donnees")
-	print("2. Creer une sous-population")
-	print("3. Traitement statistique")
-	print("4. Modifier une base")
-	print("5. Quitter")
-	chx = input("\nChoix utilisateur : ")
+class Menu:
+    def __init__(self):
+        self.choices = {}
+        self.user_ch = 0
+        
+    def disp_menu(self):
+        print("#"*50+"\n"+"#"+" "*22+"MENU"+" "*22+"#"+"\n"+"#"*50)
+        for i in range(len(self.choices)):
+            print(str(i+1)+". "+self.choices[str(i+1)])
 
-def choix_bdd():
+    def user_input(self):
+        while self.user_ch not in self.choices.keys():
+            print('-'*50+"\nVeuillez entrer un nombre parmi {}".format(
+                  ', '.join(str(i+1) for i in range(len(self.choices)))))
+            self.user_ch = input("Choix utilisateur : ")
+        
+        
+class MainMenu(Menu):
+    def __init__(self):
+        Menu.__init__(self)
+        self.choices = {"1":"Visualiser les donnees",
+                        "2":"Creer une sous-population",
+                        "3":"Traitement statistique",
+                        "4":"Modifier une base",
+                        "5":"Quitter"}
 
-menu()
+main_menu = MainMenu()
+main_menu.disp_menu()
+main_menu.user_input()
