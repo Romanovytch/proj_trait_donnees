@@ -63,7 +63,7 @@ def add_ctr(bdd, ctrs):
 		ctrs.append(ctr)
 	return (ctrs)
 
-def filter_apply(bdd, ctrs):
+def filter_apply(bdd, ctrs): #changer les indices pour les blocs en relatifs
 	pile = list()
 	for item in range(len(ctrs)):
 		if ctrs[item].__class__.__name__ == "Contrainte":
