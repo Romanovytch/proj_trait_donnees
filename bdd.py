@@ -5,12 +5,15 @@ class BaseDeDonnees:
 		with open(fichier, "r") as fd:
 			self.data = json.load(fd)
 		self.vars = self.data[0].keys()
+
 	def disp_obs(self, index):
 		print('{:6}|'.format("Obs")+''.join('{:4}|'.format(var) for var in self.vars))
 		for i in index:
 			print('{:6}|'.format(str(i))+''.join('{:4}|'.format(str(self.data[i][k])[:7]+' '*(len(k)-len(str(self.data[i][k])))) for k in self.vars))
+	
 	def disp_bdd(self):
 		self.disp_obs(range(len(self.data)))
+	
 	def del_obs(self, index):
 		for i in index:
 			del self.data[i]
@@ -77,14 +80,19 @@ def filter_apply(bdd, ctrs):
 					print(i)
 			del pile[1]
 		elif (ctrs[item] == "et"):
-			for i in pile[1]:
-				if i not in pile[0]:
-					pile[0].remove(i)
+			et_res = list()
+			for i in pile[0]:
+				if i in pile[1]:
+					et_res.append(i)
+			pile[0] = et_res
 			del pile[1]
 	return (sorted(pile[0]))
 
 bdd = BaseDeDonnees("vinData.json")
 ctrs = add_ctr(bdd, list())
+'''
 for item in range(len(ctrs)):
 	print(ctrs[item])
+'''
 bdd.disp_obs(filter_apply(bdd, ctrs))
+
