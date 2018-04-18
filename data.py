@@ -22,10 +22,10 @@ class BaseDeDonnees:
 
 class Library:
 	def __init__(self):
-		self.lib = []
+		self.dbs = []
 
 	def add_db(self, db):
-		self.lib.append(db)
+		self.dbs.append(db)
 	
 	def rm_db(self, index):
 		del self.lib[index]
