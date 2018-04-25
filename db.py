@@ -1,11 +1,12 @@
 import json
-from menu import Menu, SelectMenu
+import menu
 
 class BaseDeDonnees:
-	def __init__(self, fichier):
+	def __init__(self, fichier, name = "Base complete"):
 		with open(fichier, "r") as fd:
 			self.data = json.load(fd)
 		self.vars = self.data[0].keys()
+		self.name = name
 
 	def disp_obs(self, index):
 		print('{:6}|'.format("Obs")+''.join('{:4}|'.format(var) for var in self.vars))
@@ -37,9 +38,6 @@ class Filter:
 		ret = "Selection des donnees telles que : " + str(self.ctrs[k])
 	
 	def add_ctr(self):
-		selection_menu = SelectMenu()
-		selection_menu.disp_menu()
-		choice = selection_menu.user_input()
 		if choice == 2:
 			self.ctrs = self.add_ctr()
 			self.ctrs = self.add_ctr()
