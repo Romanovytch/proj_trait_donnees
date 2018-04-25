@@ -1,5 +1,5 @@
 import os
-from data import *
+from db import *
 
 class Menu:
 	def __init__(self, lib):
@@ -41,7 +41,7 @@ class LibMenu(Menu):
 class SelectMenu(Menu):
 	def __init__(self, lib):
 		Menu.__init__(self, lib)
-		self.name "Outil de selection"
+		self.name = "Outil de selection"
 		self.choices = {"1":"Contrainte simple",
 				"2":"Bloc OU",
 				"3":"Bloc ET",
@@ -61,15 +61,17 @@ class MainMenu(Menu):
                         	"3":"Traitement statistique",
                         	"4":"Modifier une base",
                         	"5":"Quitter"}
-		self.fcts = [self.show_bdd]
+		self.fcts = [self.show_bdd, self.create_pop]
 
 	def show_bdd(self):
 		lib_menu = LibMenu(lib)
 		lib_menu.disp_menu()
 		self.lib.dbs[lib_menu.user_input()-1].disp_bdd()
 
-	def add_ech(self):
-		
+	def create_pop(self):
+		fil = Filter()
+		fil.add_ctr()
+		lib.bds[0].disp_bdd(fil.apply_filter())
 
 lib = Library()
 lib.add_db(BaseDeDonnees("vinData.json"))

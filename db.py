@@ -1,4 +1,5 @@
 import json
+from menu import Menu, SelectMenu
 
 class BaseDeDonnees:
 	def __init__(self, fichier):
@@ -27,7 +28,7 @@ class Contrainte:
 	def __str__(self):
 		return (self.var + self.op + str(self.val))
 
-class Filtre:
+class Filter:
 	def __init__(self, bdd):
 		self.varlist = bdd.vars
 		self.oplist = ['<', '>', '==', '!=']
@@ -42,11 +43,11 @@ class Filtre:
 		if choice == 2:
 			self.ctrs = self.add_ctr()
 			self.ctrs = self.add_ctr()
-			ctrs.append("ou")
+			self.ctrs.append("ou")
 		elif choice == 3:
 			self.ctrs = self.add_ctr()
 			self.ctrs = self.add_ctr()
-			ctrs.append("et")
+			self.ctrs.append("et")
 		else:
 			vect = list()
 			print("\n\n##### Variables :\n")
@@ -59,8 +60,8 @@ class Filtre:
 				print(str(k)+". "+bdd.data[0].keys()[vect[0]]+" "+op[k])
 			vect.append(op[int(input("\n\nChoix utilisateur ? : "))])
 			vect.append(input("\n\n##### Valeur :\n\nChoix utilisateur : "))
-			ctr = Contrainte(bdd.data[0].keys()[vect[0]], vect[1], vect[2])
-			ctrs.append(ctr)
+			self.ctr = Contrainte(bdd.data[0].keys()[vect[0]], vect[1], vect[2])
+			self.ctrs.append(ctr)
 		return self.ctrs
 
 	def appy_filter(bdd):
@@ -86,4 +87,14 @@ class Filtre:
 				pile[0] = et_res
 				del pile[1]
 		return (sorted(pile[0]))
+
+class Library:
+	def __init__(self):
+		self.dbs = []
+
+	def add_db(self, db):
+		self.dbs.append(db)
+	
+	def rm_db(self, index):
+		del self.lib[index]
 
