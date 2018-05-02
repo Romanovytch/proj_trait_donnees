@@ -9,11 +9,12 @@ class Menu:
     def disp_menu(self):
         print ("\n"*100)
         print("#"*50+"\n"+"#"+" "*22+"MENU"+" "*22+"#"+"\n"+"#"*50)
-        '''print(" "*((50-len(self.name))/2)+self.name+" "*((50-len(self.name))/2)+"\n")'''
+        print(" "*int(((50-len(self.name))/2))+self.name+" "*int(((50-len(self.name))/2))+"\n")
         for i in range(len(self.choices)):
             print(str(i+1)+". "+self.choices[str(i+1)])
 
     def user_input(self):
+        self.user_ch = 0
         while str(self.user_ch) not in self.choices.keys():
             print('-'*50+"\nVeuillez entrer un nombre parmi {}".format(', '.join(str(i+1) for i in range(len(self.choices)))))
             self.user_ch = input("Choix utilisateur : ")
@@ -78,11 +79,19 @@ class ValMenu(Menu):
         Menu.__init__(self)
         self.name = "Quelle valeur ?"
         self.choices = dict()
-        self.choices = {"":"Entrez la valeur : "}
 
     def user_input(self):
-        return input()
+        return input("Entrez une valeur : ")
 
+class NameMenu(Menu):
+    def __init__(self):
+        Menu.__init__(self)
+        self.name = "Nommer l'echantillon"
+        self.choices = dict()
+
+    def user_input(self):
+        return input("Entrez un nom pour l'echantillon : ")
+        
 class MainMenu(Menu):
     def __init__(self, lib):
         Menu.__init__(self)
@@ -101,9 +110,14 @@ class MainMenu(Menu):
         self.lib.dbs[lib_menu.user_input()-1].disp_bdd()
 
     def create_pop(self):
+        nm = NameMenu()
+        nm.disp_menu()
+        name = nm.user_input()
         fil = Filter(lib.dbs[0])
         fil.add_ctr()
-        self.lib.dbs[0].disp_bdd(fil.apply_filter())
+        self.lib.add_db(self.lib.create_db(name, fil.apply_filter()))
+        self.lib.dbs[1].disp_bdd()
+        
 
 		
 class Contrainte:
@@ -150,6 +164,7 @@ class Filter:
         opm.user_input()
         op = opm.get_choice()
         valm = ValMenu()
+        valm.disp_menu()
         val = valm.user_input()
         self.ctrs.append(Contrainte(var, op, val))
  
@@ -175,11 +190,13 @@ class Filter:
                         et_res.append(i)
                         pile[0] = et_res
                 del pile[1]
+        print(pile[0])
         return (sorted(pile[0]))        
         
 lib = Library()
 lib.add_db(BaseDeDonnees("vinData.json"))
 main_menu = MainMenu(lib)
-main_menu.disp_menu()
-main_menu.user_input()
-main_menu.do_method()
+while main_menu.user_ch != 5:
+    main_menu.disp_menu()
+    main_menu.user_input()
+    main_menu.do_method()
