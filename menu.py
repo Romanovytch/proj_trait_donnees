@@ -1,5 +1,6 @@
 from db import Library, BaseDeDonnees
 import stat_descritptive as statd
+import clustering as clst
 
 class Menu:
     def __init__(self, comment = ""):
@@ -212,25 +213,41 @@ class StatMenu(Menu):
     def __init__(self, lib):
         Menu.__init__(self)
         self.name = "Traitement statistique"
-        self.choices = {"1":"Resume statistique (moyenne, mediane, ecart-type)",
-                        "2":"Boxplots",
+        self.choices = {"1":"Resume statistique [var. quantitatives]",
+                        "2":"Resume statistique [var. qualititatives]",
                         "3":"Tests statistiques",
                         "4":"Retour"}
-        self.fcts = [self.stat_descr,
+        self.fcts = [self.stat_quanti,
+                     self.stat_quali,
                      self.stat_tests,
-                     self.stat_boxplots,
                      self.quit_menu]
         self.lib = lib
                      
-    def stat_descr(self):
+    def stat_quanti(self):
         StatDescrMenu(self.lib).start()
         
-    def stat_boxplots(self):
-        return
+    def stat_quali(self):
+        StatDescrMenu(self.lib).start()
         
     def stat_tests(self):
         return
 
+class ClusteringMenu(Menu):
+    def __init__(self, lib, comment):
+        Menu.__init__(self, comment)
+        self.name = "Clustering"
+        self.choices = dict()
+
+    def user_input(self):
+        ch = 0
+        while ch not in [str(i) for i in range(1, 21)]:
+            ch = input("Entrez un nombre entre 1 et 20 : ")
+        self.user_ch = int(ch)
+            
+    def start(self):
+        self.disp_menu()
+        self.user_input()
+        clst.Cluster(lib.dbs[0]).clustering(self.user_ch)
         
 class MainMenu(Menu):
     def __init__(self, lib):
@@ -239,11 +256,13 @@ class MainMenu(Menu):
         self.choices = {"1":"Visualiser les donnees",
                         "2":"Creer une sous-population",
                         "3":"Traitement statistique",
-                        "4":"Modifier une base",
-                        "5":"Quitter"}
+                        "4":"Clustering",
+                        "5":"Modifier une base",
+                        "6":"Quitter"}
         self.fcts = [self.show_bdd,
                      self.create_pop,
                      self.stat,
+                     self.clustering,
                      self.modify_db,
                      self.quit_menu]
         self.lib = lib
@@ -260,6 +279,9 @@ class MainMenu(Menu):
         
     def stat(self):
         StatMenu(lib).start()
+
+    def clustering(self):
+        ClusteringMenu(self.lib.dbs[0], "Combien de groupes ?").start()
         
     def modify_db(self):
         return
