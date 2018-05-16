@@ -7,12 +7,15 @@ Created on Sun Apr  1 14:02:53 2018
 
 import numpy as np
 import copy
+import sys
 
 from random import randint
 
 class Cluster:
     def __init__(self,bdd): #la classe Cluster prend en attribut la liste de vins de la base de donnée
         self.data=bdd.data
+        print("\nVeuillez patienter")
+        print('[', end='', flush=True)
     
     def centr_red(self): #renvoie une copie de la base de donnée centrée réduite pour chaque valeur
         ctrd=copy.copy(self)
@@ -76,6 +79,14 @@ class Cluster:
                 if vin not in copy[gr]:
                         return False
         return True
+   
+    def progress(self, count, total, status=''):
+        bar_len = 60
+        filled_len = int(round(bar_len * count / float(total)))
+        percents = round(100.0 * count / float(total), 1)
+        bar = ('\x1b[32m\x1b[1m' + '\u25A0' + '\x1b[0m') * filled_len + '-' * (bar_len - filled_len)
+        sys.stdout.write('\r[%s] %s%s ...%s\r' % (bar, percents, '%', status))
+        sys.stdout.flush() 
         
     def clustering(self,p): #algorithme des K-means
         ctrd=self.centr_red()
@@ -84,6 +95,7 @@ class Cluster:
         groupes=ctrd.regroupement(barycentres)
         barycentres=ctrd.barycentres_groupes(groupes)
         for i in range(20):
+            self.progress(i, 20, "Clustering en cours")
             copy=list(groupes)
             groupes=ctrd.regroupement(barycentres)
             barycentres=ctrd.barycentres_groupes(groupes)
@@ -97,5 +109,3 @@ class Cluster:
         for i in range(len(groups)):
             print("Groupe "+str(i+1)+" :\n#Vins : {}".format(', '.join(str(index) for index in groups[i])))
         input("Appuyez sur entree pour revenir au menu")
-            
-        

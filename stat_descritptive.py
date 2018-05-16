@@ -5,7 +5,7 @@ Created on Mon Mar 26 09:55:56 2018
 @author: id1157
 """
 import numpy as np
-import matplotlib.pyplot as plt
+import pandas as pd
 
 class StatDescr:
     def __init__(self, bdd, variables): #la classe StatDescr prend en attribut la base de donnée et les variables sur lesquelles on soouhaite travailler
@@ -45,12 +45,12 @@ class StatDescr:
         return np.percentile(values, 90)
         
     def boxplot(self): #affiche la boîte à moustaches de chaque variable
-        for i in self.variables:
-            data_i=[]
+        data = [[] for var in self.variables]
+        for i in range(len(self.variables)):
             for j in range (len(self.bdd.data)):
-                data_i.append(self.bdd.data[j][i])
-            plt.boxplot(data_i)
-        print("\nDes boxplots ont ete generes sur des fenetres annexes.")
+                data[i].append(self.bdd.data[j][self.variables[i]])
+            dataframe = pd.DataFrame(data)
+            dataframe.boxplot()
     
     def stat_summary(self): #renvoie les statistiques de chaque variable et sa boîte à moustaches
         print('\n'*100)
@@ -64,7 +64,7 @@ class StatDescr:
             for stat in range(len(self.stats)):
                 stat_data[self.stats[stat]].append(self.stats_fcts[stat](value_list[i]))
         print('{:20}|'.format("VARIABLE")+''.join('{:10}|'.format(var) for var in self.stats))
-        print('-'*110)
+        print('-'*130)
         for i in range(len(self.variables)):
             print('{:20}|'.format(self.variables[i])+''.join('{:10}|'.format(str(stat_data[k][i])[:7]+' '*(len(k)-len(str(stat_data[k][i])))) for k in self.stats))
         self.boxplot()

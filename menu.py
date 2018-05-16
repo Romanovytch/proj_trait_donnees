@@ -1,6 +1,7 @@
 from db import Library, BaseDeDonnees
 import stat_descritptive as statd
 import clustering as clst
+import chi_2 as chisq
 
 class Menu:
     def __init__(self, comment = ""):
@@ -52,8 +53,15 @@ class LibMenu(Menu):
         self.choices = dict()
         for i in range(len(lib.dbs)):
             self.choices[str(i+1)] = lib.dbs[i].name
+            self.fcts.append(self.quit_menu)
         self.choices[str(i+2)] = "Retour"
-        self.choices[str(i+3)] = "Quitter"
+        self.fcts.append(self.quit_menu)
+        
+    def start(self):
+        while self.quit == False:
+            self.disp_menu()
+            self.user_input()
+            self.do_method()
 
 class SelectMenu(Menu):
     def __init__(self, filt, comment = ""):
@@ -96,14 +104,14 @@ class SelectMenu(Menu):
         self.filt.ctrs.append("or")
                         
 class VarMenu(Menu):
-    def __init__(self, bdd):
+    def __init__(self, varlist):
         Menu.__init__(self)
         self.name = "Choix de la variable"
         self.choices = dict()
-        for i in range(len(bdd.vars)):
-            self.choices[str(i+1)] = bdd.vars[i]
+        for i in range(len(varlist)):
+            self.choices[str(i+1)] = varlist[i]
         self.choices[str(i+2)] = "Retour"
-        for i in range(len(bdd.vars)):
+        for i in range(len(varlist)):
             self.fcts.append(self.get_choice)
         self.fcts.append(self.quit_menu)
         
@@ -177,7 +185,7 @@ class NameMenu(Menu):
 
         
 class StatDescrMenu(Menu):
-    def __init__(self, lib):
+    def __init__(self, db):
         Menu.__init__(self)
         self.name = "Resume statistique"
         self.choices = {"1":"Ajout variable",
@@ -187,7 +195,7 @@ class StatDescrMenu(Menu):
         self.fcts = [self.add_var,
                      self.validate,
                      self.quit_menu]
-        self.lib = lib
+        self.db = db
         
     def start(self):
         while self.quit != True:
@@ -197,15 +205,15 @@ class StatDescrMenu(Menu):
             self.do_method()
         
     def add_var(self):
-        vm = VarMenu(lib.dbs[0])
+        vm = VarMenu(self.db.vars)
         vm.disp_menu()
         vm.user_input()
-        if int(vm.user_ch) <= len(self.lib.dbs[0].vars):
+        if int(vm.user_ch) <= len(self.db.vars):
             vm.get_choice()
             self.varlist.append(vm.user_choice)
 
     def validate(self):
-        statd.StatDescr(lib.dbs[0], self.varlist).stat_summary()
+        statd.StatDescr(self.db, self.varlist).stat_summary()
         self.quit = True
 
                     
@@ -224,13 +232,18 @@ class StatMenu(Menu):
         self.lib = lib
                      
     def stat_quanti(self):
-        StatDescrMenu(self.lib).start()
+        lib_menu = LibMenu(lib)
+        lib_menu.start()
+        if int(lib_menu.user_ch) <= len(lib.dbs):
+            StatDescrMenu(self.lib.dbs[int(lib_menu.user_ch) - 1]).start()
         
     def stat_quali(self):
         StatDescrMenu(self.lib).start()
         
     def stat_tests(self):
-        return
+        chi2 = chisq.test("fixed acidity", "pH", lib.dbs[0].data)
+        print(chi2.chi_2(float(input("Entrer un risque : "))))
+        input("Appuyez sur entree pour continuer")
 
 class ClusteringMenu(Menu):
     def __init__(self, lib, comment):
@@ -257,20 +270,19 @@ class MainMenu(Menu):
                         "2":"Creer une sous-population",
                         "3":"Traitement statistique",
                         "4":"Clustering",
-                        "5":"Modifier une base",
-                        "6":"Quitter"}
+                        "5":"Quitter"}
         self.fcts = [self.show_bdd,
                      self.create_pop,
                      self.stat,
                      self.clustering,
-                     self.modify_db,
                      self.quit_menu]
         self.lib = lib
 
     def show_bdd(self):
         lib_menu = LibMenu(lib)
-        lib_menu.disp_menu()
-        self.lib.dbs[lib_menu.user_input()-1].disp_bdd()
+        lib_menu.start()
+        if int(lib_menu.user_ch) <= len(lib.dbs):
+            lib.dbs[int(lib_menu.user_ch) - 1].disp_bdd()
 
     def create_pop(self):
         fil = Filter(lib.dbs[0])
@@ -282,9 +294,6 @@ class MainMenu(Menu):
 
     def clustering(self):
         ClusteringMenu(self.lib.dbs[0], "Combien de groupes ?").start()
-        
-    def modify_db(self):
-        return
 		
 class Contrainte:
     def __init__(self, var, op, val):
