@@ -43,14 +43,6 @@ class StatDescr:
         
     def st_dec9(self, values):
         return np.percentile(values, 90)
-        
-    def boxplot(self): #affiche la boîte à moustaches de chaque variable
-        data = [[] for var in self.variables]
-        for i in range(len(self.variables)):
-            for j in range (len(self.bdd.data)):
-                data[i].append(self.bdd.data[j][self.variables[i]])
-            dataframe = pd.DataFrame(data)
-            dataframe.boxplot()
     
     def stat_summary(self): #renvoie les statistiques de chaque variable et sa boîte à moustaches
         print('\n'*100)
@@ -67,5 +59,4 @@ class StatDescr:
         print('-'*130)
         for i in range(len(self.variables)):
             print('{:20}|'.format(self.variables[i])+''.join('{:10}|'.format(str(stat_data[k][i])[:7]+' '*(len(k)-len(str(stat_data[k][i])))) for k in self.stats))
-        self.boxplot()
         input("Appuyez sur entree pour revenir au menu stat")

@@ -1,9 +1,13 @@
-from db import Library, BaseDeDonnees
 import stat_descritptive as statd
-import clustering as clst
+import cluster as clst
 import chi_2 as chisq
+import error as err
 
 class Menu:
+    '''
+    Classe mere Menu gerant l'affichage du menu,
+    l'entree utilisateur et l'execution de la fonctionnalite choisie
+    '''
     def __init__(self, comment = ""):
         self.choices = {}
         self.fcts = []
@@ -14,7 +18,7 @@ class Menu:
         self.quit = False
         
     def disp_menu(self):
-        print ("\n"*100)
+        print("\n"*100)
         print("#"*50+"\n"+"#"+" "*22+"MENU"+" "*22+"#"+"\n"+"#"*50)
         print(" "*int(((50-len(self.name))/2))+self.name+" "*int(((50-len(self.name))/2))+"\n")
         if self.comment != "":
@@ -26,11 +30,15 @@ class Menu:
 
     def user_input(self):
         self.user_ch = 0
-        while str(self.user_ch) not in self.choices.keys():
+        while self.check() == False:
             print('-'*50+"\nVeuillez entrer un nombre parmi {}".format(', '.join(str(i+1) for i in range(len(self.choices)))))
             self.user_ch = input("Choix utilisateur : ")
         return int(self.user_ch)
 
+    def check(self):
+        if str(self.user_ch) not in self.choices.keys():
+            return False
+        
     def do_method(self):
         self.fcts[int(self.user_ch)-1]()
         
@@ -47,6 +55,9 @@ class Menu:
         self.quit = True
         
 class LibMenu(Menu):
+    '''
+    Menu affichant le choix de la base de donnée
+    '''
     def __init__(self, lib):
         Menu.__init__(self)
         self.name = "Choix de l'echantillon"
@@ -64,6 +75,9 @@ class LibMenu(Menu):
             self.do_method()
 
 class SelectMenu(Menu):
+    '''
+    Menu d'echantillonage
+    '''
     def __init__(self, filt, comment = ""):
         Menu.__init__(self, comment)
         self.name = "Menu de selection"
@@ -104,10 +118,16 @@ class SelectMenu(Menu):
         self.filt.ctrs.append("or")
                         
 class VarMenu(Menu):
-    def __init__(self, varlist):
-        Menu.__init__(self)
+    '''
+    Menu de choix de la variable
+    '''
+    def __init__(self, varlist, comment = "", quali = True, quanti = True):
+        Menu.__init__(self, comment)
         self.name = "Choix de la variable"
         self.choices = dict()
+        self.varlist = varlist
+        self.quali = quali
+        self.quanti = quanti
         for i in range(len(varlist)):
             self.choices[str(i+1)] = varlist[i]
         self.choices[str(i+2)] = "Retour"
@@ -123,13 +143,30 @@ class VarMenu(Menu):
             if self.quit == False:
                 op_menu = OpMenu()
                 self.quit = op_menu.start(filt, self.user_choice)
+            
+    def check(self):
+        if str(self.user_ch) not in self.choices.keys():
+            return False
+        else:
+            if int(self.user_ch)-1 != len(self.varlist):
+                if (self.quali == False) & (self.varlist[int(self.user_ch) - 1] == 'type'):
+                    err.Error("Choisissez une variable quantitative").display()
+                    return False
+                if (self.quanti == False) & (self.varlist[int(self.user_ch) - 1] != 'type'):
+                    err.Error("Choisissez une variable qualitative").display()
+                    return False
+        return True
         
 class OpMenu(Menu):
+    '''
+    Menu de choix de l'opérateur
+    '''
     def __init__(self):
         Menu.__init__(self)
         self.name = "Choix de l'operateur de comparaison"
         self.choices = dict()
         self.op = ['<', '>', '==', '!=']
+        self.var = ""
         for i in range(len(self.op)):
             self.choices[str(i+1)] = self.op[i]
         self.choices[str(i+2)] = "Retour"
@@ -138,6 +175,7 @@ class OpMenu(Menu):
         self.fcts.append(self.quit_menu)
         
     def start(self, filt, var):
+        self.var = var
         while self.quit == False:
             self.disp_menu()
             self.user_input()
@@ -147,30 +185,62 @@ class OpMenu(Menu):
                 self.quit = val_menu.start(filt, var, self.user_choice)
             else:
                 return False
+    def check(self):
+        if str(self.user_ch) not in self.choices.keys():
+            return False
+        if self.var == 'type':
+            if int(self.user_ch) in [1, 2]:
+                err.Error("Choisir '==' ou '!=' pour une variable qualitative").display()
+                return False
+        return True
         
 class ValMenu(Menu):
+    """
+    Menu de choix de la valeur
+    """
     def __init__(self, comment = ""):
         Menu.__init__(self, comment)
         self.name = "Quelle valeur ?"
         self.choices = dict()
+        self.var = ""
 
     def user_input(self):
-        return input("Entrez une valeur : ")
+        self.user_ch = input("Entrez une valeur : ")
+        while self.check() == False:
+            self.user_ch = input("Entrez une valeur : ")
         
     def start(self, filt, var, op):
         self.disp_menu()
-        val = self.user_input()
-        if val != "":
-            filt.ctrs.append(Contrainte(var, op, val))
-            print(var+op+val)
-            input()
-            filt.add_str(Contrainte(var, op, val))
+        self.var = var
+        self.user_input()
+        if self.user_ch != "":
+            filt.ctrs.append(Contrainte(var, op, self.user_ch))
+            filt.add_str(Contrainte(var, op, self.user_ch))
             filt.success = True
             return True
         return False
-            
+          
+    def is_number(self, s):
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
+        
+    def check(self):
+        if self.var != 'type':
+            if self.is_number(self.user_ch) == False:
+                err.Error("Veuillez entrer un nombre pour une variable quantitative").display()
+                return False
+            return True
+        else:
+            self.user_ch = "'"+ self.user_ch + "'" 
+            return True  
 
 class NameMenu(Menu):
+    '''
+    Menu de choix du nom
+    '''
     def __init__(self):
         Menu.__init__(self)
         self.name = "Nommer l'echantillon"
@@ -185,6 +255,9 @@ class NameMenu(Menu):
 
         
 class StatDescrMenu(Menu):
+    """
+    Menu de statistiques descriptives
+    """
     def __init__(self, db):
         Menu.__init__(self)
         self.name = "Resume statistique"
@@ -200,12 +273,12 @@ class StatDescrMenu(Menu):
     def start(self):
         while self.quit != True:
             self.disp_menu()
-            print(self.varlist)
+            print("\nVariables choisies : {}".format(''.join(' {},'.format(var) for var in self.varlist)))
             self.user_input()
             self.do_method()
         
     def add_var(self):
-        vm = VarMenu(self.db.vars)
+        vm = VarMenu(self.db.vars, quali = False)
         vm.disp_menu()
         vm.user_input()
         if int(vm.user_ch) <= len(self.db.vars):
@@ -222,34 +295,45 @@ class StatMenu(Menu):
         Menu.__init__(self)
         self.name = "Traitement statistique"
         self.choices = {"1":"Resume statistique [var. quantitatives]",
-                        "2":"Resume statistique [var. qualititatives]",
-                        "3":"Tests statistiques",
-                        "4":"Retour"}
+                        "2":"Test de khi2",
+                        "3":"Retour"}
         self.fcts = [self.stat_quanti,
-                     self.stat_quali,
                      self.stat_tests,
                      self.quit_menu]
         self.lib = lib
+        self.varlist = []
                      
     def stat_quanti(self):
-        lib_menu = LibMenu(lib)
+        lib_menu = LibMenu(self.lib)
         lib_menu.start()
-        if int(lib_menu.user_ch) <= len(lib.dbs):
+        if int(lib_menu.user_ch) <= len(self.lib.dbs):
             StatDescrMenu(self.lib.dbs[int(lib_menu.user_ch) - 1]).start()
         
-    def stat_quali(self):
-        StatDescrMenu(self.lib).start()
-        
     def stat_tests(self):
-        chi2 = chisq.test("fixed acidity", "pH", lib.dbs[0].data)
-        print(chi2.chi_2(float(input("Entrer un risque : "))))
-        input("Appuyez sur entree pour continuer")
+        lib_menu = LibMenu(self.lib)
+        lib_menu.start()
+        self.varlist = []
+        if int(lib_menu.user_ch) <= len(self.lib.dbs):
+            for i in range(2):
+                vm = VarMenu(self.lib.dbs[0].vars, comment = "Choix de la variable "+str(i+1))
+                vm.disp_menu()
+                vm.user_input()
+                if int(vm.user_ch) <= len(self.lib.dbs[0].vars):
+                    vm.get_choice()
+                    self.varlist.append(vm.user_choice)
+                else:
+                    i = 3
+            if len(self.varlist) == 2:
+                chi2 = chisq.test(self.varlist[0], self.varlist[1], self.lib.dbs[int(lib_menu.user_ch)-1].data)
+                print(chi2.chi_2(float(input("Entrez un risque : "))))
+                input("Appuyez sur entree pour continuer")
 
 class ClusteringMenu(Menu):
     def __init__(self, lib, comment):
         Menu.__init__(self, comment)
         self.name = "Clustering"
         self.choices = dict()
+        self.lib = lib
 
     def user_input(self):
         ch = 0
@@ -260,7 +344,7 @@ class ClusteringMenu(Menu):
     def start(self):
         self.disp_menu()
         self.user_input()
-        clst.Cluster(lib.dbs[0]).clustering(self.user_ch)
+        clst.Cluster(self.lib.dbs[0]).clustering(self.user_ch)
         
 class MainMenu(Menu):
     def __init__(self, lib):
@@ -279,22 +363,22 @@ class MainMenu(Menu):
         self.lib = lib
 
     def show_bdd(self):
-        lib_menu = LibMenu(lib)
+        lib_menu = LibMenu(self.lib)
         lib_menu.start()
-        if int(lib_menu.user_ch) <= len(lib.dbs):
-            lib.dbs[int(lib_menu.user_ch) - 1].disp_bdd()
+        if int(lib_menu.user_ch) <= len(self.lib.dbs):
+            self.lib.dbs[int(lib_menu.user_ch) - 1].disp_bdd()
 
     def create_pop(self):
-        fil = Filter(lib.dbs[0])
+        fil = Filter(self.lib.dbs[0])
         if len(fil.ctrs) != 0:
             self.lib.add_db(self.lib.create_db(fil.ech_name, fil.apply_filter()))
         
     def stat(self):
-        StatMenu(lib).start()
+        StatMenu(self.lib).start()
 
     def clustering(self):
-        ClusteringMenu(self.lib.dbs[0], "Combien de groupes ?").start()
-		
+        ClusteringMenu(self.lib, "Combien de groupes ?").start()
+    
 class Contrainte:
     def __init__(self, var, op, val):
         self.var = var
@@ -305,6 +389,10 @@ class Contrainte:
         return (self.var + self.op + str(self.val))
 
 class Filter:
+    """
+    Objet responsable de la creation du sous-echantillon
+    méthode NPI
+    """
     def __init__(self, bdd):
         self.bdd = bdd
         self.oplist = ['<', '>', '==', '!=']
@@ -351,35 +439,39 @@ class Filter:
         sm.start()
 
     def simple_ctr(self):
-        varm = VarMenu(self.bdd)
+        varm = VarMenu(self.bdd.vars)
         varm.start(self)
  
+    def is_number(self, s):
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
+        
     def apply_filter(self):
         pile = list()
         for item in range(len(self.ctrs)):
             if self.ctrs[item].__class__.__name__ == "Contrainte":
                 res = []
                 for i in range(len(self.bdd.data)):
-                    if eval(str(self.bdd.data[i][self.ctrs[item].var])+self.ctrs[item].op+str(self.ctrs[item].val)):   
+                    if self.is_number(self.bdd.data[i][self.ctrs[item].var]) == False:
+                        evaluation = "'"+self.bdd.data[i][self.ctrs[item].var]+"'"+self.ctrs[item].op+self.ctrs[item].val
+                    else:
+                        evaluation = str(self.bdd.data[i][self.ctrs[item].var])+self.ctrs[item].op+self.ctrs[item].val
+                    if eval(evaluation):   
                         res.append(i)
                 pile.append(res)
-            if (self.ctrs[item] == "ou"):
+            if (self.ctrs[item] == "or"):
                 for i in pile[1]:
                     if i not in pile[0]:
                         pile[0].append(i)
-                        print(i)
                 del pile[1]
-            elif (self.ctrs[item] == "et"):
+            elif (self.ctrs[item] == "and"):
                 et_res = list()
                 for i in pile[0]:
                     if i in pile[1]:
                         et_res.append(i)
                         pile[0] = et_res
                 del pile[1]
-        print(pile[0])
-        return (sorted(pile[0]))        
-        
-lib = Library()
-lib.add_db(BaseDeDonnees("vinData.json"))
-main_menu = MainMenu(lib)
-main_menu.start()
+        return (sorted(pile[0]))

@@ -15,7 +15,7 @@ class BaseDeDonnees:
         print('{:6}|'.format("Obs")+''.join('{:4}|'.format(var) for var in list(self.data[0].keys())))
         entry = ""
         show_all = False
-        for i in range(1,len(index)):
+        for i in range(1,len(index) + 1):
             if show_all == False:
                 if (i % 10) == 0:
                     entry = ""
@@ -23,13 +23,15 @@ class BaseDeDonnees:
                         entry = input("\nEntrez S pour voir les dix suivantes ou A pour tout afficher : ")
                         if entry == "A":
                             show_all = True
-                        else:
-                            print('{:6}|'.format("Obs")+''.join('{:4}|'.format(var) for var in list(self.data[0].keys())))
-            print('\n{:6}|'.format(str(i))+''.join('{:4}|'.format(str(self.data[i][k])[:7]+' '*(len(k)-len(str(self.data[i][k])))) for k in list(self.data[0].keys())))
-        input("\n\nAppuyez sur une touche pour revenir au menu :")
+                    print('\n{:6}|'.format("Obs")+''.join('{:4}|'.format(var) for var in list(self.data[0].keys())))
+            print('{:6}|'.format(str(i))+''.join('{:4}|'.format(str(self.data[i-1][k])[:7]+' '*(len(k)-len(str(self.data[i-1][k])))) for k in list(self.data[0].keys())))
 	
     def disp_bdd(self):
-        self.disp_obs(range(len(self.data)))
+        if len(self.data) == 0:
+            print("/!\ Cette base ne contient aucune donnee. /!\\n")
+        else:
+            self.disp_obs(range(len(self.data)))
+        input("\n\nAppuyez sur une touche pour revenir au menu :")
 
     def add_obs(self, obs):
         self.data.append(obs)

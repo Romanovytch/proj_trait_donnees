@@ -1,7 +1,7 @@
-import numpy as np
-
 from scipy import misc  
 from scipy import stats
+import error as err
+
 
 class test:
     def __init__(self, var_l, var_c, data):
@@ -28,7 +28,7 @@ class test:
             self.var2 = self.quanti_quali()[var_c]
     
     def quanti_quali(self): #cree un dictionnaire des variables quantitatives avec pour valeurs les quartiles et qualitatives avec pour valeurs les modalites
-        variable = list(self.data[0].keys())
+        variable = [self.varname1, self.varname2]
         valeur_quant = {} #dictionnaire des valeurs de chaque variable quantitative
         valeur_qual = {} #dictionnaire des modalites pour chaque variable qualitative
         quartiles = [] #liste des quartiles de la variable quantitative l (2eme boucle)
@@ -45,8 +45,8 @@ class test:
                         valeur_qual[l].append(k[l])
         for l in variable:  
             if type(self.data[0][l]) != str:
-                for m in range(0,5): 
-                    quartiles.append(str(np.percentile(valeur_quant[l], m*25)))
+                for m in range(0,4): 
+                    quartiles.append(str(round((min(valeur_quant[l])+m*(max(valeur_quant[l])-min(valeur_quant[l]))/4),3))) #on peut aussi faire avec les quartiles : np.percentile(valeur_quant[l], m*25
                 var_quart[l] = quartiles
                 quartiles = [] 
             else :
@@ -111,41 +111,41 @@ class test:
                 obs1 = 0
                 obs2 = 0
         return array_the
-
-    def newtons_method(self, f, x, tolerance=0.0001): #méthode de Newton pour le calcul du chi2 theorique
-        while True: 
-            x1 = x - f(x) / misc.derivative(f, x) 
-            t = abs(x1 - x)
-            if t < tolerance:
-                break
-            x = x1
-        return x
-        
-    def chi2_risk(self, risk, df): #calcul du chi2 theorique
-        global alpha, dfreedom
-        alpha = risk
-        dfreedom = df
-        return self.newtons_method(self.f, dfreedom)
                                                 
     def chi_2(self,risk): #teste si les variables sont dependantes (chi2 calcule < chi2 theorique) ou non (inverse)
         obs = self.cont_obs()
         the = self.cont_the()
         chi_2_val = 0
         n=0
-        for i in range (1,len(obs)-1):
-            for j in range (1,len(obs)-1):
-                if obs[i][j]<5:
+        for i in range (1,len(obs)):
+            for j in range (1,len(obs[0])):
+                if the[i][j] < 5 :
                     n=1
-                if float(the[i][j]) != 0:
+                if the[i][j] != 0:
                     chi_2_val += ((float(obs[i][j])-float(the[i][j]))**2)/float(the[i][j])
         df = (len(self.var2)-1)*(len(self.var1)-1)
         chi_2_ris = self.chi2_risk(risk,df)
+        print("\n> Le khi2 est de : " + str(round(chi_2_val,2))+'\n')
         if n == 1 :
-            print('le chi2 n''est pas fiable car certains effectifs observés sont inférieurs à 5')
+            err.Error("Le chi2 n''est pas fiable car certains effectifs observés sont inférieurs à 5")
         if chi_2_val < chi_2_ris:
-            return 'les variables sont indépendantes avec un degré de confiance ' + str(risk) + ' ' + str(chi_2_val)
+            return '> Les variables sont indépendantes avec un degré de confiance ' + str(risk)
         else : 
-            return 'les variables sont dépendantes avec un degré de confiance ' + str(risk) + ' ' + str(chi_2_val)
+            return '> Les variables sont dépendantes avec un degré de confiance ' + str(risk)
+
+    def chi2_risk(self, risk, df): #calcul du chi2 theorique
+        global alpha, dfreedom
+        alpha = risk
+        dfreedom = df
+        return self.newtons_method(self.f, dfreedom)
+            
+    def newtons_method(self, f, x, tolerance=0.0001):#méthode de Newton pour le calcul du chi2 theorique
+        t = tolerance-1
+        while  t < tolerance and misc.derivative(self.f, x) != 0 : 
+            x1 = x - self.f(x) / misc.derivative(self.f, x) 
+            t = abs(x1 - x)
+            x = x1
+        return x
         
     def f(self, x): #fonction pour calcul du chi2 theorique
         return 1 - stats.chi2.cdf(x, dfreedom) - alpha
