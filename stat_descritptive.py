@@ -6,6 +6,7 @@ Created on Mon Mar 26 09:55:56 2018
 """
 import numpy as np
 import pandas as pd
+import os
 
 class StatDescr:
     def __init__(self, bdd, variables): #la classe StatDescr prend en attribut la base de donnée et les variables sur lesquelles on soouhaite travailler
@@ -45,7 +46,7 @@ class StatDescr:
         return np.percentile(values, 90)
     
     def stat_summary(self): #renvoie les statistiques de chaque variable et sa boîte à moustaches
-        print('\n'*100)
+        os.system("clear")
         print("Resume statistiques [var. quantitatives]\n\n")
         stat_data = {stat:[] for stat in self.stats}
         value_list = [[] for var in self.variables]

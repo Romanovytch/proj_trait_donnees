@@ -2,6 +2,7 @@ import stat_descritptive as statd
 import cluster as clst
 import chi_2 as chisq
 import error as err
+import os
 
 class Menu:
     '''
@@ -18,7 +19,7 @@ class Menu:
         self.quit = False
         
     def disp_menu(self):
-        print("\n"*100)
+        os.system("clear")
         print("#"*50+"\n"+"#"+" "*22+"MENU"+" "*22+"#"+"\n"+"#"*50)
         print(" "*int(((50-len(self.name))/2))+self.name+" "*int(((50-len(self.name))/2))+"\n")
         if self.comment != "":

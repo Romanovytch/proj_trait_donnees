@@ -1,4 +1,5 @@
 import json
+import os
 
 class BaseDeDonnees:
     def __init__(self, fichier = 0, name = "Base complete"):
@@ -11,7 +12,7 @@ class BaseDeDonnees:
         self.name = name
 
     def disp_obs(self, index):
-        print ("\n"*100)
+        os.system("clear")
         print('{:6}|'.format("Obs")+''.join('{:4}|'.format(var) for var in list(self.data[0].keys())))
         entry = ""
         show_all = False
